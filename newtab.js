@@ -1,5 +1,18 @@
 const STORAGE_KEY = "todoTabState";
+const THEME_KEY = "todoTabTheme";
 const LISTS = ["today", "thisWeek", "nextWeek"];
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.getElementById("theme-toggle").textContent = theme === "dark" ? "☀" : "🌙";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  const next = current === "dark" ? "light" : "dark";
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -237,6 +250,9 @@ function wireBoardEvents() {
 }
 
 function init() {
+  applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
+  document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+
   const stored = loadState();
   state = stored || { tasks: [], meta: null };
   applyRollover(state);

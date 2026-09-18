@@ -3,9 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <title>Todo Tab</title>
+<script>
+  try {
+    document.documentElement.dataset.theme =
+      localStorage.getItem("todoTabTheme") === "light" ? "light" : "dark";
+  } catch (e) {}
+</script>
 <link rel="stylesheet" href="newtab.css" />
 </head>
 <body>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme"></button>
+
   <main class="board">
     <section class="column" data-list="today">
       <h2>Today</h2>

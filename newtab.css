@@ -1,5 +1,4 @@
 :root {
-  color-scheme: light dark;
   --bg: #1b1c1e;
   --column-bg: #232427;
   --border: #34363a;
@@ -7,6 +6,23 @@
   --text-dim: #9a9ba0;
   --accent: #5b8cff;
   --done: #55585f;
+  --hover-bg: rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4f4f6;
+  --column-bg: #ffffff;
+  --border: #dcdde0;
+  --text: #1c1d1f;
+  --text-dim: #6b6c70;
+  --accent: #3b6fe0;
+  --done: #a5a6aa;
+  --hover-bg: rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -90,7 +106,7 @@ body {
 }
 
 .task:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover-bg);
 }
 
 .task.dragging {
@@ -136,7 +152,6 @@ body {
   width: 0;
   opacity: 0;
   pointer-events: none;
-  color-scheme: dark;
   transition: width 0.1s ease;
 }
 
@@ -165,4 +180,26 @@ body {
 
 .task-delete:hover {
   color: #ff6b6b;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--column-bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
 }
