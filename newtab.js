@@ -23,17 +23,12 @@ function weekStartKey(date = new Date()) {
 }
 
 function loadState() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(STORAGE_KEY, (result) => {
-      resolve(result[STORAGE_KEY] || null);
-    });
-  });
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : null;
 }
 
 function saveState(state) {
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ [STORAGE_KEY]: state }, resolve);
-  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function applyRollover(state) {
@@ -92,9 +87,9 @@ function render() {
   });
 }
 
-async function mutate(fn) {
+function mutate(fn) {
   fn(state);
-  await saveState(state);
+  saveState(state);
   render();
 }
 
@@ -190,11 +185,11 @@ function wireBoardEvents() {
   });
 }
 
-async function init() {
-  const stored = await loadState();
+function init() {
+  const stored = loadState();
   state = stored || { tasks: [], meta: null };
   applyRollover(state);
-  await saveState(state);
+  saveState(state);
   render();
   wireAddForms();
   wireBoardEvents();
