@@ -22,6 +22,26 @@ function weekStartKey(date = new Date()) {
   return dateKey(d);
 }
 
+// Days between today and a "YYYY-MM-DD" due date (negative = overdue).
+function daysRemaining(dueDate) {
+  const [y, m, d] = dueDate.split("-").map(Number);
+  const due = new Date(y, m - 1, d);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((due - today) / 86400000);
+}
+
+function dueLabel(diff) {
+  if (diff < 0) return "Overdue";
+  return `${diff}d remaining`;
+}
+
+function dueUrgency(diff) {
+  if (diff <= 1) return "due-red";
+  if (diff < 7) return "due-amber";
+  return "due-green";
+}
+
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
   return raw ? JSON.parse(raw) : null;
@@ -82,6 +102,19 @@ function render() {
         const text = node.querySelector(".task-text");
         text.textContent = task.text;
 
+        const dueLabelEl = node.querySelector(".task-due-label");
+        dueLabelEl.className = "task-due-label";
+        if (task.dueDate) {
+          const diff = daysRemaining(task.dueDate);
+          dueLabelEl.textContent = dueLabel(diff);
+          dueLabelEl.classList.add(dueUrgency(diff));
+        } else {
+          dueLabelEl.textContent = "";
+        }
+
+        const dueInput = node.querySelector(".task-due-input");
+        dueInput.value = task.dueDate || "";
+
         ul.appendChild(node);
       });
   });
@@ -126,6 +159,15 @@ function moveTask(id, listName) {
   });
 }
 
+function setDueDate(id, dueDate) {
+  mutate((s) => {
+    const task = s.tasks.find((t) => t.id === id);
+    if (!task) return;
+    if (dueDate) task.dueDate = dueDate;
+    else delete task.dueDate;
+  });
+}
+
 function wireAddForms() {
   document.querySelectorAll(".add-form").forEach((form) => {
     form.addEventListener("submit", (e) => {
@@ -149,6 +191,15 @@ function wireBoardEvents() {
       deleteTask(id);
     } else if (e.target.classList.contains("task-done")) {
       toggleTask(id);
+    }
+  });
+
+  board.addEventListener("change", (e) => {
+    const li = e.target.closest(".task");
+    if (!li) return;
+
+    if (e.target.classList.contains("task-due-input")) {
+      setDueDate(li.dataset.id, e.target.value);
     }
   });
 

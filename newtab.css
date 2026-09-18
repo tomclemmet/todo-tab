@@ -108,6 +108,46 @@ body {
   color: var(--done);
 }
 
+.task-due-label {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.task-due-label.due-red {
+  color: #ff6b6b;
+}
+
+.task-due-label.due-amber {
+  color: #e6a23c;
+}
+
+.task-due-label.due-green {
+  color: #6bcf8a;
+}
+
+.task-due-input {
+  background: transparent;
+  border: 0 solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 0;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  color-scheme: dark;
+  transition: width 0.1s ease;
+}
+
+.task:hover .task-due-input {
+  border-width: 1px;
+  padding: 2px 4px;
+  width: 116px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .task-delete {
   background: none;
   border: none;
