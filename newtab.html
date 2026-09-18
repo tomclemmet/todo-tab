@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Todo Tab</title>
+<link rel="stylesheet" href="newtab.css" />
+</head>
+<body>
+  <main class="board">
+    <section class="column" data-list="today">
+      <h2>Today</h2>
+      <form class="add-form" data-list="today">
+        <input type="text" placeholder="Add a task..." autocomplete="off" />
+      </form>
+      <ul class="task-list" data-list="today"></ul>
+    </section>
+
+    <section class="column" data-list="thisWeek">
+      <h2>This Week</h2>
+      <form class="add-form" data-list="thisWeek">
+        <input type="text" placeholder="Add a task..." autocomplete="off" />
+      </form>
+      <ul class="task-list" data-list="thisWeek"></ul>
+    </section>
+
+    <section class="column" data-list="nextWeek">
+      <h2>Next Week</h2>
+      <form class="add-form" data-list="nextWeek">
+        <input type="text" placeholder="Add a task..." autocomplete="off" />
+      </form>
+      <ul class="task-list" data-list="nextWeek"></ul>
+    </section>
+  </main>
+
+  <template id="task-template">
+    <li class="task" draggable="true">
+      <input type="checkbox" class="task-done" />
+      <span class="task-text"></span>
+      <button type="button" class="task-delete" aria-label="Delete task">&times;</button>
+    </li>
+  </template>
+
+  <script src="newtab.js"></script>
+</body>
+</html>

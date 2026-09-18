@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Todo Tab",
+  "version": "1.0.0",
+  "description": "A new tab page with Today / This Week / Next Week to-do lists.",
+  "permissions": ["storage"],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  }
+}
