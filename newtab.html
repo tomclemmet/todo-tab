@@ -14,6 +14,15 @@
 <body>
   <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle theme"></button>
 
+  <header class="clock">
+    <span class="clock-time" id="clock-time"></span>
+    <span class="clock-date" id="clock-date"></span>
+  </header>
+
+  <form class="search-form" id="search-form">
+    <input type="text" id="search-input" placeholder="Search Google or type a URL" autocomplete="off" />
+  </form>
+
   <main class="board">
     <section class="column" data-list="today">
       <h2>Today</h2>
@@ -45,7 +54,10 @@
       <input type="checkbox" class="task-done" />
       <span class="task-text"></span>
       <span class="task-due-label"></span>
-      <input type="date" class="task-due-input" aria-label="Due date" />
+      <span class="task-due-wrap">
+        <span class="task-due-display"></span>
+        <input type="date" class="task-due-input" aria-label="Due date" />
+      </span>
       <button type="button" class="task-delete" aria-label="Delete task">&times;</button>
     </li>
   </template>
