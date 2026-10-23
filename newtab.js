@@ -1,6 +1,7 @@
 const STORAGE_KEY = "todoTabState";
 const THEME_KEY = "todoTabTheme";
-const LISTS = ["today", "thisWeek", "nextWeek"];
+const LISTS = ["today", "later", "deadlines"];
+const LIST_MIGRATIONS = { thisWeek: "later", nextWeek: "deadlines" };
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
@@ -59,7 +60,12 @@ function formatDueDate(dueDate) {
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+  const parsed = JSON.parse(raw);
+  parsed.tasks.forEach((task) => {
+    if (LIST_MIGRATIONS[task.list]) task.list = LIST_MIGRATIONS[task.list];
+  });
+  return parsed;
 }
 
 function saveState(state) {
@@ -68,84 +74,140 @@ function saveState(state) {
 
 let state = { tasks: [] };
 
-function render() {
-  const template = document.getElementById("task-template");
+function wireCommonTaskNode(node, task) {
+  const checkbox = node.querySelector(".task-done");
+  if (checkbox) checkbox.checked = task.done;
 
+  const text = node.querySelector(".task-text");
+  text.textContent = task.text;
+
+  text.addEventListener("click", (e) => {
+    if (text.isContentEditable) return;
+    e.stopPropagation();
+    node.draggable = false;
+    text.contentEditable = "true";
+    text.focus();
+    const range = document.createRange();
+    range.selectNodeContents(text);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+
+  text.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      text.blur();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      text.textContent = task.text;
+      text.blur();
+    }
+  });
+
+  text.addEventListener("blur", () => {
+    node.draggable = true;
+    text.contentEditable = "false";
+    const newText = text.textContent.trim();
+    if (newText && newText !== task.text) {
+      editTaskText(task.id, newText);
+    } else if (!newText && !task.text) {
+      deleteTask(task.id);
+    } else {
+      text.textContent = task.text;
+    }
+  });
+}
+
+function renderTaskNode(task) {
+  const template = document.getElementById("task-template");
+  const node = template.content.firstElementChild.cloneNode(true);
+  node.dataset.id = task.id;
+
+  wireCommonTaskNode(node, task);
+
+  const dueLabelEl = node.querySelector(".task-due-label");
+  dueLabelEl.className = "task-due-label";
+  if (task.dueDate) {
+    const diff = daysRemaining(task.dueDate);
+    dueLabelEl.textContent = dueLabel(diff);
+    dueLabelEl.classList.add(dueUrgency(diff));
+  } else {
+    dueLabelEl.textContent = "";
+  }
+
+  const dueInput = node.querySelector(".task-due-input");
+  dueInput.value = task.dueDate || "";
+
+  const dueDisplay = node.querySelector(".task-due-display");
+  dueDisplay.textContent = task.dueDate ? formatDueDate(task.dueDate) : "";
+
+  const dueWrap = node.querySelector(".task-due-wrap");
+  dueWrap.addEventListener("click", () => {
+    if (typeof dueInput.showPicker === "function") dueInput.showPicker();
+  });
+
+  return node;
+}
+
+function deadlineCaption(diff) {
+  if (diff < 0) return "Overdue";
+  if (diff === 0) return "Due today";
+  return "Days left";
+}
+
+function renderDeadlineNode(task) {
+  const template = document.getElementById("deadline-template");
+  const node = template.content.firstElementChild.cloneNode(true);
+  node.dataset.id = task.id;
+
+  wireCommonTaskNode(node, task);
+
+  const caption = node.querySelector(".deadline-caption");
+  const windowEl = node.querySelector(".deadline-window");
+  const days = node.querySelector(".deadline-days");
+  windowEl.classList.remove("due-red", "due-amber", "due-green");
+
+  if (task.dueDate) {
+    const diff = daysRemaining(task.dueDate);
+    caption.textContent = deadlineCaption(diff);
+    days.textContent = String(Math.abs(diff));
+    windowEl.classList.add(dueUrgency(diff));
+  } else {
+    caption.textContent = "No date";
+    days.textContent = "–";
+  }
+
+  const dueInput = node.querySelector(".task-due-input");
+  dueInput.value = task.dueDate || "";
+
+  const windowWrap = node.querySelector(".deadline-window-wrap");
+  windowWrap.addEventListener("click", () => {
+    if (typeof dueInput.showPicker === "function") dueInput.showPicker();
+  });
+
+  return node;
+}
+
+// Tasks with no due date sort to the end of the deadlines list.
+function deadlineSortValue(task) {
+  return task.dueDate ? daysRemaining(task.dueDate) : Infinity;
+}
+
+function render() {
   LISTS.forEach((listName) => {
     const ul = document.querySelector(`.task-list[data-list="${listName}"]`);
     ul.innerHTML = "";
 
-    state.tasks
-      .filter((task) => task.list === listName)
-      .sort((a, b) => a.done - b.done)
-      .forEach((task) => {
-        const node = template.content.firstElementChild.cloneNode(true);
-        node.dataset.id = task.id;
+    const tasks = state.tasks.filter((task) => task.list === listName);
 
-        const checkbox = node.querySelector(".task-done");
-        checkbox.checked = task.done;
-
-        const text = node.querySelector(".task-text");
-        text.textContent = task.text;
-
-        text.addEventListener("click", (e) => {
-          if (text.isContentEditable) return;
-          e.stopPropagation();
-          node.draggable = false;
-          text.contentEditable = "true";
-          text.focus();
-          const range = document.createRange();
-          range.selectNodeContents(text);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        });
-
-        text.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            text.blur();
-          } else if (e.key === "Escape") {
-            e.preventDefault();
-            text.textContent = task.text;
-            text.blur();
-          }
-        });
-
-        text.addEventListener("blur", () => {
-          node.draggable = true;
-          text.contentEditable = "false";
-          const newText = text.textContent.trim();
-          if (newText && newText !== task.text) {
-            editTaskText(task.id, newText);
-          } else {
-            text.textContent = task.text;
-          }
-        });
-
-        const dueLabelEl = node.querySelector(".task-due-label");
-        dueLabelEl.className = "task-due-label";
-        if (task.dueDate) {
-          const diff = daysRemaining(task.dueDate);
-          dueLabelEl.textContent = dueLabel(diff);
-          dueLabelEl.classList.add(dueUrgency(diff));
-        } else {
-          dueLabelEl.textContent = "";
-        }
-
-        const dueInput = node.querySelector(".task-due-input");
-        dueInput.value = task.dueDate || "";
-
-        const dueDisplay = node.querySelector(".task-due-display");
-        dueDisplay.textContent = task.dueDate ? formatDueDate(task.dueDate) : "";
-
-        const dueWrap = node.querySelector(".task-due-wrap");
-        dueWrap.addEventListener("click", () => {
-          if (typeof dueInput.showPicker === "function") dueInput.showPicker();
-        });
-
-        ul.appendChild(node);
-      });
+    if (listName === "deadlines") {
+      tasks
+        .sort((a, b) => a.done - b.done || deadlineSortValue(a) - deadlineSortValue(b))
+        .forEach((task) => ul.appendChild(renderDeadlineNode(task)));
+    } else {
+      tasks.sort((a, b) => a.done - b.done).forEach((task) => ul.appendChild(renderTaskNode(task)));
+    }
   });
 }
 
@@ -155,17 +217,13 @@ function mutate(fn) {
   render();
 }
 
-function addTask(listName, text) {
-  const trimmed = text.trim();
-  if (!trimmed) return;
+function addEmptyTask(listName) {
+  const id = crypto.randomUUID();
   mutate((s) => {
-    s.tasks.push({
-      id: crypto.randomUUID(),
-      text: trimmed,
-      list: listName,
-      done: false,
-    });
+    s.tasks.push({ id, text: "", list: listName, done: false });
   });
+  const text = document.querySelector(`[data-id="${id}"] .task-text`);
+  if (text) text.click();
 }
 
 function toggleTask(id) {
@@ -210,38 +268,9 @@ function setDueDate(id, dueDate) {
   });
 }
 
-function isLikelyUrl(text) {
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(text)) return true;
-  if (/\s/.test(text)) return false;
-  if (/^localhost(:\d+)?(\/.*)?$/i.test(text)) return true;
-  return /^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/.*)?$/i.test(text);
-}
-
-function wireSearchForm() {
-  const form = document.getElementById("search-form");
-  const input = document.getElementById("search-input");
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const trimmed = input.value.trim();
-    if (!trimmed) return;
-
-    if (isLikelyUrl(trimmed)) {
-      window.location.href = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
-    } else {
-      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
-    }
-  });
-}
-
-function wireAddForms() {
-  document.querySelectorAll(".add-form").forEach((form) => {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = form.querySelector("input");
-      addTask(form.dataset.list, input.value);
-      input.value = "";
-    });
+function wireAddButtons() {
+  document.querySelectorAll(".add-btn").forEach((btn) => {
+    btn.addEventListener("click", () => addEmptyTask(btn.dataset.list));
   });
 }
 
@@ -339,9 +368,8 @@ function init() {
   state = stored || { tasks: [] };
   saveState(state);
   render();
-  wireAddForms();
+  wireAddButtons();
   wireBoardEvents();
-  wireSearchForm();
 }
 
 init();

@@ -19,33 +19,26 @@
     <span class="clock-date" id="clock-date"></span>
   </header>
 
-  <form class="search-form" id="search-form">
-    <input type="text" id="search-input" placeholder="Search Google or type a URL" autocomplete="off" />
-  </form>
-
   <main class="board">
     <section class="column" data-list="today">
-      <h2>Today</h2>
-      <form class="add-form" data-list="today">
-        <input type="text" placeholder="Add a task..." autocomplete="off" />
-      </form>
+      <div class="column-head">
+        <h2>Today</h2>
+        <button type="button" class="add-btn" data-list="today" aria-label="Add task">+</button>
+      </div>
       <ul class="task-list" data-list="today"></ul>
     </section>
 
-    <section class="column" data-list="thisWeek">
-      <h2>This Week</h2>
-      <form class="add-form" data-list="thisWeek">
-        <input type="text" placeholder="Add a task..." autocomplete="off" />
-      </form>
-      <ul class="task-list" data-list="thisWeek"></ul>
+    <section class="column" data-list="later">
+      <div class="column-head">
+        <h2>Later</h2>
+        <button type="button" class="add-btn" data-list="later" aria-label="Add task">+</button>
+      </div>
+      <ul class="task-list" data-list="later"></ul>
     </section>
 
-    <section class="column" data-list="nextWeek">
-      <h2>Next Week</h2>
-      <form class="add-form" data-list="nextWeek">
-        <input type="text" placeholder="Add a task..." autocomplete="off" />
-      </form>
-      <ul class="task-list" data-list="nextWeek"></ul>
+    <section class="column column--deadlines" data-list="deadlines">
+      <ul class="task-list deadline-list" data-list="deadlines"></ul>
+      <button type="button" class="add-btn add-deadline-btn" data-list="deadlines" aria-label="Add deadline">+ Add deadline</button>
     </section>
   </main>
 
@@ -59,6 +52,22 @@
         <input type="date" class="task-due-input" aria-label="Due date" />
       </span>
       <button type="button" class="task-delete" aria-label="Delete task">&times;</button>
+    </li>
+  </template>
+
+  <template id="deadline-template">
+    <li class="task deadline-card" draggable="true">
+      <div class="deadline-main">
+        <span class="task-text"></span>
+        <button type="button" class="task-delete" aria-label="Delete task">&times;</button>
+      </div>
+      <span class="deadline-window-wrap">
+        <span class="deadline-window">
+          <span class="deadline-days"></span>
+        </span>
+        <span class="deadline-caption"></span>
+        <input type="date" class="task-due-input" aria-label="Due date" />
+      </span>
     </li>
   </template>
 
