@@ -30,23 +30,6 @@ function renderClock() {
   });
 }
 
-function dateKey(date) {
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-}
-
-function todayKey() {
-  return dateKey(new Date());
-}
-
-// Monday-start week, identified by that Monday's date key.
-function weekStartKey(date = new Date()) {
-  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const day = d.getDay(); // 0 = Sunday .. 6 = Saturday
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diffToMonday);
-  return dateKey(d);
-}
-
 // Days between today and a "YYYY-MM-DD" due date (negative = overdue).
 function daysRemaining(dueDate) {
   const [y, m, d] = dueDate.split("-").map(Number);
@@ -83,37 +66,7 @@ function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function applyRollover(state) {
-  const currentDateKey = todayKey();
-  const currentWeekKey = weekStartKey();
-
-  if (!state.meta) {
-    state.meta = { lastOpenedDate: currentDateKey, weekStartKey: currentWeekKey };
-    return state;
-  }
-
-  const dayChanged = state.meta.lastOpenedDate !== currentDateKey;
-  const weekChanged = state.meta.weekStartKey !== currentWeekKey;
-
-  if (dayChanged) {
-    state.tasks.forEach((task) => {
-      if (task.list === "today") task.list = "thisWeek";
-    });
-  }
-
-  if (weekChanged) {
-    state.tasks.forEach((task) => {
-      if (task.list === "thisWeek") task.list = "nextWeek";
-    });
-  }
-
-  state.meta.lastOpenedDate = currentDateKey;
-  state.meta.weekStartKey = currentWeekKey;
-
-  return state;
-}
-
-let state = { tasks: [], meta: null };
+let state = { tasks: [] };
 
 function render() {
   const template = document.getElementById("task-template");
@@ -124,6 +77,7 @@ function render() {
 
     state.tasks
       .filter((task) => task.list === listName)
+      .sort((a, b) => a.done - b.done)
       .forEach((task) => {
         const node = template.content.firstElementChild.cloneNode(true);
         node.dataset.id = task.id;
@@ -227,10 +181,16 @@ function deleteTask(id) {
   });
 }
 
-function moveTask(id, listName) {
+function reorderTasks(listName, orderedIds) {
   mutate((s) => {
-    const task = s.tasks.find((t) => t.id === id);
-    if (task) task.list = listName;
+    const idToTask = new Map(s.tasks.map((t) => [t.id, t]));
+    orderedIds.forEach((id) => {
+      const task = idToTask.get(id);
+      if (task) task.list = listName;
+    });
+    const inOrder = orderedIds.map((id) => idToTask.get(id)).filter(Boolean);
+    let i = 0;
+    s.tasks = s.tasks.map((t) => (orderedIds.includes(t.id) ? inOrder[i++] : t));
   });
 }
 
@@ -285,6 +245,21 @@ function wireAddForms() {
   });
 }
 
+function getDragAfterElement(list, y) {
+  const elements = [...list.querySelectorAll(".task:not(.dragging)")];
+  return elements.reduce(
+    (closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) {
+        return { offset, element: child };
+      }
+      return closest;
+    },
+    { offset: Number.NEGATIVE_INFINITY, element: null }
+  ).element;
+}
+
 function wireBoardEvents() {
   const board = document.querySelector(".board");
 
@@ -323,10 +298,21 @@ function wireBoardEvents() {
   });
 
   document.querySelectorAll(".column").forEach((column) => {
+    const list = column.querySelector(".task-list");
+
     column.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       column.classList.add("drag-over");
+
+      const dragging = document.querySelector(".task.dragging");
+      if (!dragging) return;
+      const afterElement = getDragAfterElement(list, e.clientY);
+      if (afterElement == null) {
+        list.appendChild(dragging);
+      } else {
+        list.insertBefore(dragging, afterElement);
+      }
     });
 
     column.addEventListener("dragleave", () => {
@@ -336,8 +322,8 @@ function wireBoardEvents() {
     column.addEventListener("drop", (e) => {
       e.preventDefault();
       column.classList.remove("drag-over");
-      const id = e.dataTransfer.getData("text/plain");
-      if (id) moveTask(id, column.dataset.list);
+      const orderedIds = [...list.querySelectorAll(".task")].map((li) => li.dataset.id);
+      reorderTasks(column.dataset.list, orderedIds);
     });
   });
 }
@@ -350,8 +336,7 @@ function init() {
   setInterval(renderClock, 1000);
 
   const stored = loadState();
-  state = stored || { tasks: [], meta: null };
-  applyRollover(state);
+  state = stored || { tasks: [] };
   saveState(state);
   render();
   wireAddForms();

@@ -59,9 +59,9 @@ body {
 }
 
 .clock-time {
-  font-size: clamp(56px, 9vw, 104px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: clamp(40px, 5.5vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   line-height: 1;
   color: var(--text);
   font-variant-numeric: tabular-nums;
@@ -98,27 +98,27 @@ body {
 .board {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
-  gap: 20px;
+  gap: 40px;
   width: 100%;
   max-width: 1100px;
 }
 
 .column {
-  background: var(--column-bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
   display: flex;
   flex-direction: column;
   min-height: 300px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
 }
 
 .column.drag-over {
-  border-color: var(--accent);
+  background: var(--hover-bg);
 }
 
 .column h2 {
   margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
   font-size: 17px;
   font-weight: 700;
   text-transform: uppercase;
@@ -127,22 +127,26 @@ body {
 }
 
 .add-form {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .add-form input {
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 2px;
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: none;
+  border-bottom: 1px solid transparent;
   color: var(--text);
   font-size: 16px;
 }
 
+.add-form input::placeholder {
+  color: var(--text-dim);
+}
+
 .add-form input:focus {
   outline: none;
-  border-color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .task-list {
