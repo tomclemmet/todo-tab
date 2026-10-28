@@ -16,6 +16,18 @@ A local HTML page for a new-tab to-do board: **Today**, **This Week**, and
 - Nothing ever moves out of **Next Week** automatically; pulling tasks
   forward into **This Week** or **Today** is a manual drag, by design.
 
+## Focus timer
+
+A ring timer sits to the right of the clock. Type minutes in the ring, press
+**Start** (or Enter), and the ring drains with the minutes left in the middle.
+The tab title also shows the countdown, so you can see it from other tabs.
+
+When it hits zero you get a beep and the tab title changes to
+`⏰ Time's up`. This only fires while a new-tab page is still open — navigating
+that tab away stops the alert, though the timer's end time is stored so it
+shows correctly when you return. (Desktop notifications were tried but
+dropped: Chrome never applied the permission on a `file://` page.)
+
 ## Setup
 
 This is a plain static page, not a Chrome extension — point a third-party
