@@ -594,10 +594,6 @@ body {
   .top {
     gap: 16px;
   }
-  /* Hide the focus timer on phones to leave room for the lists. */
-  .focus {
-    display: none;
-  }
   body {
     padding: 64px 16px 24px;
     gap: 24px;
