@@ -555,19 +555,51 @@ body {
   border-color: var(--accent);
 }
 
+.portal-link {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--column-bg);
+  font-size: 16px;
+  line-height: 1;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-link:hover {
+  border-color: var(--accent);
+}
+
 /* Phone / narrow screens: stack the columns */
 @media (max-width: 800px) {
   .board {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .column {
+    min-height: 0;
   }
   .top {
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 16px;
   }
-  .clock,
-  .focus {
+  .clock {
     grid-column: 1;
-    justify-self: center;
+  }
+  /* Hide the focus timer on phones to leave room for the lists. */
+  .focus {
+    display: none;
+  }
+  body {
+    padding: 64px 16px 24px;
+    gap: 24px;
+    justify-content: flex-start;
   }
 }

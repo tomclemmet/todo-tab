@@ -136,12 +136,31 @@ function beep() {
   } catch (e) {}
 }
 
+// Desktop notification. Chrome only allows these on secure pages, so on plain
+// http it needs the "treat insecure origin as secure" flag (see README).
+function notifyDone() {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const note = new Notification("⏰ Time's up", {
+      body: `${Math.round(timer.duration / 60000)} minute focus session finished`,
+      tag: "todo-tab-timer",
+    });
+    note.onclick = () => {
+      window.focus();
+      note.close();
+    };
+  } catch (e) {}
+}
+
 function finishTimer(announce) {
   // Another open tab may already have finished (and beeped for) this run.
   const alreadyDone = loadTimer().finished;
   timer = { ...timer, endsAt: null, remaining: null, finished: true };
   saveTimer();
-  if (announce && !alreadyDone) beep();
+  if (announce && !alreadyDone) {
+    beep();
+    notifyDone();
+  }
 }
 
 function startTimer() {
@@ -155,6 +174,13 @@ function startTimer() {
   // Browsers only allow audio after a user gesture, so set it up now.
   try {
     audioCtx = audioCtx || new AudioContext();
+  } catch (e) {}
+
+  // Ask once for notification permission (also needs a user gesture).
+  try {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
   } catch (e) {}
   renderTimer();
 }
@@ -597,6 +623,12 @@ function wireBoardEvents() {
 async function init() {
   applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+
+  // Point the portal link at whichever address this page was opened from
+  // (LAN or Tailscale). Opened as a local file, the default LAN address stays.
+  if (location.protocol.startsWith("http")) {
+    document.getElementById("portal-link").href = `http://${location.hostname}:8082`;
+  }
 
   renderClock();
   setInterval(renderClock, 1000);

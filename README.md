@@ -22,11 +22,16 @@ A ring timer sits to the right of the clock. Type minutes in the ring, press
 **Start** (or Enter), and the ring drains with the minutes left in the middle.
 The tab title also shows the countdown, so you can see it from other tabs.
 
-When it hits zero you get a beep and the tab title changes to
-`⏰ Time's up`. This only fires while a new-tab page is still open — navigating
-that tab away stops the alert, though the timer's end time is stored so it
-shows correctly when you return. (Desktop notifications were tried but
-dropped: Chrome never applied the permission on a `file://` page.)
+When it hits zero you get a beep, a desktop notification and the tab title
+changes to `⏰ Time's up`. This only fires while the page is still open —
+navigating that tab away stops the alert, though the timer's end time is stored
+so it shows correctly when you return.
+
+Notifications need a secure page. Served over plain `http://` from the home
+server, Chrome only allows them if the address is added at
+`chrome://flags/#unsafely-treat-insecure-origin-as-secure` (set to Enabled,
+then relaunch Chrome). Press **Start** once and click **Allow** when Chrome
+asks. They don't work from a `file://` page.
 
 ## Setup
 
