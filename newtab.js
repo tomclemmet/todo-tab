@@ -447,8 +447,15 @@ function mutate(fn) {
   render();
 }
 
+// crypto.randomUUID() only exists on HTTPS/localhost pages, and this page is
+// served over plain http on the home network, so build the id ourselves.
+function newId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 function addEmptyTask(listName) {
-  const id = crypto.randomUUID();
+  const id = newId();
   mutate((s) => {
     s.tasks.push({ id, text: "", list: listName, done: false });
   });
