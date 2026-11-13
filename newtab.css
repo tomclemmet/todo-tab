@@ -242,7 +242,8 @@ body {
   transition: background 0.15s ease;
 }
 
-.column.drag-over {
+.column.drag-over,
+.group.drag-over {
   background: var(--hover-bg);
 }
 
@@ -263,6 +264,37 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--heading);
+}
+
+.group {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.group[hidden] {
+  display: none;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px;
+}
+
+.group h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.group .task-list {
+  min-height: 28px;
 }
 
 .add-btn {

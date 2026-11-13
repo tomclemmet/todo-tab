@@ -49,12 +49,38 @@
       <ul class="task-list" data-list="today"></ul>
     </section>
 
-    <section class="column" data-list="later">
+    <section class="column column--later" data-list="later">
       <div class="column-head">
         <h2>Later</h2>
-        <button type="button" class="add-btn" data-list="later" aria-label="Add task">+</button>
       </div>
-      <ul class="task-list" data-list="later"></ul>
+      <div class="group" data-group="phd">
+        <div class="group-head">
+          <h3>PhD</h3>
+          <button type="button" class="add-btn" data-list="later" data-group="phd" aria-label="Add PhD task">+</button>
+        </div>
+        <ul class="task-list" data-list="later" data-group="phd"></ul>
+      </div>
+      <div class="group" data-group="job">
+        <div class="group-head">
+          <h3>Job</h3>
+          <button type="button" class="add-btn" data-list="later" data-group="job" aria-label="Add job task">+</button>
+        </div>
+        <ul class="task-list" data-list="later" data-group="job"></ul>
+      </div>
+      <div class="group" data-group="admin">
+        <div class="group-head">
+          <h3>Admin</h3>
+          <button type="button" class="add-btn" data-list="later" data-group="admin" aria-label="Add admin task">+</button>
+        </div>
+        <ul class="task-list" data-list="later" data-group="admin"></ul>
+      </div>
+      <!-- Tasks saved before groups existed. Hidden once empty. -->
+      <div class="group group--unsorted" data-group="" hidden>
+        <div class="group-head">
+          <h3>Unsorted</h3>
+        </div>
+        <ul class="task-list" data-list="later" data-group=""></ul>
+      </div>
     </section>
 
     <section class="column column--deadlines" data-list="deadlines">

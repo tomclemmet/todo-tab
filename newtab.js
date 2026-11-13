@@ -451,11 +451,15 @@ function deadlineSortValue(task) {
 }
 
 function render() {
-  LISTS.forEach((listName) => {
-    const ul = document.querySelector(`.task-list[data-list="${listName}"]`);
+  document.querySelectorAll(".task-list").forEach((ul) => {
+    const listName = ul.dataset.list;
+    const group = ul.dataset.group || "";
     ul.innerHTML = "";
 
-    const tasks = state.tasks.filter((task) => task.list === listName);
+    // Only the Later list is split into groups; tasks without one are "unsorted".
+    const tasks = state.tasks.filter(
+      (task) => task.list === listName && (listName !== "later" || (task.group || "") === group)
+    );
 
     if (listName === "deadlines") {
       tasks
@@ -464,6 +468,9 @@ function render() {
     } else {
       tasks.sort((a, b) => a.done - b.done).forEach((task) => ul.appendChild(renderTaskNode(task)));
     }
+
+    // The "Unsorted" section only shows while it has something in it.
+    if (listName === "later" && group === "") ul.closest(".group").hidden = tasks.length === 0;
   });
 }
 
@@ -480,10 +487,12 @@ function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
-function addEmptyTask(listName) {
+function addEmptyTask(listName, group) {
   const id = newId();
   mutate((s) => {
-    s.tasks.push({ id, text: "", list: listName, done: false });
+    const task = { id, text: "", list: listName, done: false };
+    if (group) task.group = group;
+    s.tasks.push(task);
   });
   const text = document.querySelector(`[data-id="${id}"] .task-text`);
   if (text) text.click();
@@ -502,12 +511,15 @@ function deleteTask(id) {
   });
 }
 
-function reorderTasks(listName, orderedIds) {
+function reorderTasks(listName, orderedIds, group) {
   mutate((s) => {
     const idToTask = new Map(s.tasks.map((t) => [t.id, t]));
     orderedIds.forEach((id) => {
       const task = idToTask.get(id);
-      if (task) task.list = listName;
+      if (!task) return;
+      task.list = listName;
+      if (listName === "later" && group) task.group = group;
+      else delete task.group;
     });
     const inOrder = orderedIds.map((id) => idToTask.get(id)).filter(Boolean);
     let i = 0;
@@ -533,7 +545,7 @@ function setDueDate(id, dueDate) {
 
 function wireAddButtons() {
   document.querySelectorAll(".add-btn").forEach((btn) => {
-    btn.addEventListener("click", () => addEmptyTask(btn.dataset.list));
+    btn.addEventListener("click", () => addEmptyTask(btn.dataset.list, btn.dataset.group));
   });
 }
 
@@ -589,7 +601,9 @@ function wireBoardEvents() {
     if (li) li.classList.remove("dragging");
   });
 
-  document.querySelectorAll(".column").forEach((column) => {
+  // Each place a task can be dropped: a whole column, except Later, where each group is its own.
+  const dropZones = document.querySelectorAll(".column:not(.column--later), .group");
+  dropZones.forEach((column) => {
     const list = column.querySelector(".task-list");
 
     column.addEventListener("dragover", (e) => {
@@ -615,7 +629,7 @@ function wireBoardEvents() {
       e.preventDefault();
       column.classList.remove("drag-over");
       const orderedIds = [...list.querySelectorAll(".task")].map((li) => li.dataset.id);
-      reorderTasks(column.dataset.list, orderedIds);
+      reorderTasks(list.dataset.list, orderedIds, list.dataset.group);
     });
   });
 }
