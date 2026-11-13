@@ -23,21 +23,13 @@
     </div>
 
     <div class="focus" id="focus" data-state="idle">
-      <div class="focus-ring">
-        <svg viewBox="0 0 100 100" aria-hidden="true">
-          <circle class="focus-track" cx="50" cy="50" r="44" />
-          <circle class="focus-progress" id="focus-progress" cx="50" cy="50" r="44" />
-        </svg>
-        <div class="focus-center">
-          <input type="number" id="focus-minutes" class="focus-minutes" min="1" max="180" step="1" aria-label="Focus minutes" />
-          <span class="focus-readout" id="focus-readout"></span>
-          <span class="focus-unit" id="focus-unit"></span>
-        </div>
-      </div>
-      <div class="focus-actions">
-        <button type="button" class="focus-btn" id="focus-primary">Start</button>
-        <button type="button" class="focus-btn focus-btn--quiet" id="focus-reset">Reset</button>
-      </div>    </div>
+      <input type="number" id="focus-minutes" class="focus-minutes" min="1" max="180" step="1" aria-label="Focus minutes" />
+      <span class="focus-readout" id="focus-readout"></span>
+      <span class="focus-unit" id="focus-unit"></span>
+      <button type="button" class="focus-btn" id="focus-primary">Start</button>
+      <button type="button" class="focus-btn focus-btn--quiet" id="focus-reset">Reset</button>
+      <div class="focus-bar"><div class="focus-fill" id="focus-progress"></div></div>
+    </div>
   </header>
 
   <main class="board">

@@ -36,7 +36,6 @@ function renderClock() {
 // States: idle, running (endsAt set), paused (remaining set), done.
 const TIMER_KEY = "todoTabTimer";
 const DEFAULT_MINUTES = 25;
-const RING_LENGTH = 2 * Math.PI * 44;
 const BASE_TITLE = "Todo Tab";
 
 let timer = { duration: DEFAULT_MINUTES * 60000, endsAt: null, remaining: null, finished: false };
@@ -80,9 +79,8 @@ function renderTimer() {
   root.dataset.state = state;
 
   const progress = document.getElementById("focus-progress");
-  progress.style.strokeDasharray = RING_LENGTH;
   const fraction = state === "done" ? 1 : left / timer.duration;
-  progress.style.strokeDashoffset = RING_LENGTH * (1 - fraction);
+  progress.style.width = `${fraction * 100}%`;
 
   const readout = document.getElementById("focus-readout");
   const unit = document.getElementById("focus-unit");
@@ -168,7 +166,10 @@ function startTimer() {
     timer.duration = clampMinutes(document.getElementById("focus-minutes").value) * 60000;
   }
   const length = timerState() === "paused" ? timer.remaining : timer.duration;
-  timer = { ...timer, endsAt: Date.now() + length, remaining: null, finished: false };
+  // Land the end time on a whole second so the countdown's seconds flip at the
+  // same instant as the clock's (otherwise they tick at different fractions).
+  const endsAt = Math.round((Date.now() + length) / 1000) * 1000;
+  timer = { ...timer, endsAt, remaining: null, finished: false };
   saveTimer();
 
   // Browsers only allow audio after a user gesture, so set it up now.
@@ -237,7 +238,7 @@ function wireTimer() {
   document.addEventListener("visibilitychange", tickTimer);
 
   renderTimer();
-  setInterval(tickTimer, 250);
+  setInterval(tickTimer, 100);
 }
 
 // Days between today and a "YYYY-MM-DD" due date (negative = overdue).
@@ -645,7 +646,8 @@ async function init() {
   }
 
   renderClock();
-  setInterval(renderClock, 1000);
+  // Redraw often (not once a second) so the seconds flip right on the boundary.
+  setInterval(renderClock, 100);
   wireTimer();
 
   state = await loadState();
