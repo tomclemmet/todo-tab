@@ -1,0 +1,14 @@
+services:
+  todo:
+    image: node:22-alpine
+    container_name: todo
+    restart: unless-stopped
+    user: "1000:1000"
+    working_dir: /app
+    command: node server.js
+    volumes:
+      - .:/app
+    ports:
+      # Only reachable from the home network and Tailscale (Docker bypasses ufw)
+      - "192.168.1.178:8084:3000"
+      - "100.73.133.109:8084:3000"

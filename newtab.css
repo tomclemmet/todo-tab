@@ -554,3 +554,20 @@ body {
 .theme-toggle:hover {
   border-color: var(--accent);
 }
+
+/* Phone / narrow screens: stack the columns */
+@media (max-width: 800px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+  .top {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 16px;
+  }
+  .clock,
+  .focus {
+    grid-column: 1;
+    justify-self: center;
+  }
+}

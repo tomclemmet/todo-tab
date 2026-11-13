@@ -241,18 +241,65 @@ function formatDueDate(dueDate) {
     .replace(",", "");
 }
 
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  const parsed = JSON.parse(raw);
+function readLocalState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && Array.isArray(parsed.tasks) ? parsed : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function migrateState(parsed) {
   parsed.tasks.forEach((task) => {
     if (LIST_MIGRATIONS[task.list]) task.list = LIST_MIGRATIONS[task.list];
   });
   return parsed;
 }
 
+// Tasks live on the home server (/api/state). The browser copy is only a
+// fallback for when the server can't be reached (or the page is opened as file://).
+async function fetchServerState() {
+  const res = await fetch("/api/state", { cache: "no-store" });
+  if (!res.ok) throw new Error("server error");
+  return res.json(); // null if the server has no tasks yet
+}
+
+async function loadState() {
+  try {
+    const server = await fetchServerState();
+    if (server) return migrateState(server);
+    // First run: upload whatever this browser already had.
+    return migrateState(readLocalState() || { tasks: [] });
+  } catch (e) {
+    return migrateState(readLocalState() || { tasks: [] });
+  }
+}
+
 function saveState(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  fetch("/api/state", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(state),
+    keepalive: true,
+  }).catch(() => {});
+}
+
+// Pick up changes made on another device when this page is shown again.
+async function refreshFromServer() {
+  if (document.querySelector(".task-text[contenteditable='true']")) return;
+  if (document.querySelector(".task.dragging")) return;
+  try {
+    const server = await fetchServerState();
+    if (server && JSON.stringify(server.tasks) !== JSON.stringify(state.tasks)) {
+      state = migrateState(server);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+    }
+  } catch (e) {}
 }
 
 let state = { tasks: [] };
@@ -540,7 +587,7 @@ function wireBoardEvents() {
   });
 }
 
-function init() {
+async function init() {
   applyTheme(document.documentElement.dataset.theme === "light" ? "light" : "dark");
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
 
@@ -548,12 +595,16 @@ function init() {
   setInterval(renderClock, 1000);
   wireTimer();
 
-  const stored = loadState();
-  state = stored || { tasks: [] };
+  state = await loadState();
   saveState(state);
   render();
   wireAddButtons();
   wireBoardEvents();
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshFromServer();
+  });
+  setInterval(refreshFromServer, 30000);
 }
 
 init();
